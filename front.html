@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+</head>
+
+<body>
+    <div>Teachable Machine Image Model</div>
+    <button type="button" onclick="init()">Start</button>
+    <div id="stream-container"></div>
+    <div id="label-container"></div>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
+    <script type="text/javascript">
+        // the link to your model provided by Teachable Machine export panel
+        const URL = "url_modelmu_bolo";
+
+        let model, labelContainer, maxPredictions;
+
+        async function init() {
+            const modelURL = URL + "model.json";
+            const metadataURL = URL + "metadata.json";
+
+            model = await tmImage.load(modelURL, metadataURL);
+            maxPredictions = model.getTotalClasses();
+
+            // Replace webcam setup with MJPEG stream
+            const streamContainer = document.getElementById("stream-container");
+            const ipCameraURL = "ip_mu/mjpeg/1";
+            const imgElement = document.createElement("img");
+            imgElement.crossOrigin = "anonymous"; // or "use-credentials" depending on your server setup
+            imgElement.src = ipCameraURL;
+            streamContainer.appendChild(imgElement);
+
+
+            labelContainer = document.getElementById("label-container");
+            for (let i = 0; i < maxPredictions; i++) {
+                labelContainer.appendChild(document.createElement("div"));
+            }
+
+            // Start the prediction loop
+            window.requestAnimationFrame(loop);
+        }
+
+        async function loop() {
+            await predict();
+            window.requestAnimationFrame(loop);
+        }
+
+        async function predict() {
+            // Replace webcam canvas with MJPEG stream
+            const imgElement = document.querySelector("#stream-container img");
+
+            // predict can take in an image, video, or canvas HTML element
+            const prediction = await model.predict(imgElement);
+            for (let i = 0; i < maxPredictions; i++) {
+                const classPrediction =
+                    prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+                labelContainer.childNodes[i].innerHTML = classPrediction;
+            }
+        }
+    </script>
+</body>
+
+</html>
